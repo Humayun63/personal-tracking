@@ -1,6 +1,7 @@
 // Service worker: installability (app shell precache + offline fallback for
 // navigations) plus a Background Sync wake-up that asks any open page to
-// flush its offline Qaza log queue (see lib/qaza/useOfflineQueue.ts).
+// flush its offline queues (Qaza logs, Budget expenses — see each module's
+// useOfflineQueue.ts).
 //
 // The app is otherwise fully dynamic/authenticated, so this deliberately
 // doesn't try to cache API/data responses — only the static shell needed to
@@ -31,8 +32,10 @@ self.addEventListener("fetch", (event) => {
   );
 });
 
+const SYNC_TAGS = ["qaza-sync", "budget-sync"];
+
 self.addEventListener("sync", (event) => {
-  if (event.tag !== "qaza-sync") return;
+  if (!SYNC_TAGS.includes(event.tag)) return;
   event.waitUntil(
     self.clients.matchAll().then((clients) => {
       clients.forEach((client) => client.postMessage({ type: "hearth-sync" }));

@@ -48,29 +48,6 @@ export async function createMonth(params: { month: string; copyFromMonthId?: str
   redirect(`/budget?month=${params.month}`);
 }
 
-export async function addExpense(params: {
-  monthId: string;
-  categoryId: string;
-  description: string;
-  amount: number;
-  expenseDate: string;
-}) {
-  const user = await requireUser();
-  const supabase = await createClient();
-  const { error } = await supabase.from("budget_expenses").insert({
-    user_id: user.id,
-    month_id: params.monthId,
-    category_id: params.categoryId,
-    description: params.description,
-    amount: params.amount,
-    expense_date: params.expenseDate,
-  });
-  if (error) throw new Error(error.message);
-  revalidatePath("/budget");
-  revalidatePath("/budget/categories");
-  revalidatePath("/budget/months");
-}
-
 export async function deleteExpense(expenseId: string) {
   await requireUser();
   const supabase = await createClient();

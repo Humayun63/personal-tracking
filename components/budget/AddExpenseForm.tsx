@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
-import { addExpense } from "@/app/(app)/budget/actions";
+import { enqueue } from "@/lib/budget/offline-queue";
 import type { MonthCategory } from "@/lib/budget/queries";
 
 interface AddExpenseFormProps {
@@ -40,7 +40,9 @@ export function AddExpenseForm({ monthId, categories, editable }: AddExpenseForm
       return;
     }
     startTransition(async () => {
-      await addExpense({
+      // Queued locally first (works offline) and synced in the background —
+      // see lib/budget/offline-queue.ts.
+      await enqueue({
         monthId,
         categoryId,
         description: description.trim() || "Expense",

@@ -4,12 +4,12 @@ import { useSyncExternalStore, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { subscribe, getSnapshot, flush } from "./offline-queue";
 
-/** Queued-but-not-yet-synced log entries, e.g. to fold into optimistic totals. */
+/** Queued-but-not-yet-synced expenses, e.g. to fold into optimistic totals/lists. */
 export function useQueueEntries() {
   return useSyncExternalStore(subscribe, getSnapshot, () => []);
 }
 
-/** Pending (unsynced) log count — drives the "will sync" indicator. */
+/** Pending (unsynced) expense count — drives the "will sync" indicator. */
 export function usePendingCount() {
   return useQueueEntries().length;
 }
@@ -25,9 +25,9 @@ export function useOfflineSync() {
 
   useEffect(() => {
     // A background flush removes entries from the queue once Supabase has
-    // them, but the server-fetched totals on this page were read before that
-    // — without a refresh, a synced entry would vanish from view the moment
-    // it drops out of the optimistic merge, until the next navigation.
+    // them, but the server-fetched expenses on this page were read before
+    // that — without a refresh, a synced entry would vanish from view the
+    // moment it drops out of the optimistic merge, until the next navigation.
     const flushAndRefresh = async () => {
       const before = getSnapshot().length;
       await flush();

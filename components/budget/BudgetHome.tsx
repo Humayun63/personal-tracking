@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { MonthSwitcher } from "./MonthSwitcher";
 import { BalanceCard } from "./BalanceCard";
 import { AlertBanner } from "./AlertBanner";
@@ -9,6 +9,8 @@ import { AddExpenseForm } from "./AddExpenseForm";
 import { ByCategoryTab } from "./ByCategoryTab";
 import { AnalyticsTab } from "./AnalyticsTab";
 import { LogTab } from "./LogTab";
+import { SyncIndicator } from "./SyncIndicator";
+import { useQueueEntries } from "@/lib/budget/useOfflineQueue";
 import { monthTotals, paceStats } from "@/lib/budget/derive";
 import type { MonthCategory, BudgetExpense, BudgetMonth } from "@/lib/budget/queries";
 
@@ -34,13 +36,28 @@ export function BudgetHome({
   month,
   monthId,
   categories,
-  expenses,
+  expenses: serverExpenses,
   allMonths,
   isCurrentMonth,
 }: BudgetHomeProps) {
   const [tab, setTab] = useState<Tab>("add");
   const [editingPast, setEditingPast] = useState(false);
   const editable = isCurrentMonth || editingPast;
+
+  const pendingEntries = useQueueEntries();
+  const expenses = useMemo(() => {
+    const pendingForMonth = pendingEntries
+      .filter((e) => e.monthId === monthId)
+      .map((e) => ({
+        id: e.id,
+        category_id: e.categoryId,
+        description: e.description,
+        amount: e.amount,
+        expense_date: e.expenseDate,
+        created_at: e.createdAt,
+      }));
+    return [...pendingForMonth, ...serverExpenses];
+  }, [serverExpenses, pendingEntries, monthId]);
 
   const { totalBudget, totalSpent } = monthTotals(categories, expenses);
   const pace = paceStats(month, totalBudget, totalSpent);
@@ -65,6 +82,8 @@ export function BudgetHome({
           </button>
         </div>
       )}
+
+      <SyncIndicator />
 
       <AlertBanner
         remaining={pace.remaining}

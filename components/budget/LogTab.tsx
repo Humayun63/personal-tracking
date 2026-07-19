@@ -4,6 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import { TrashIcon } from "@/components/icons";
 import { formatCurrency } from "@/lib/budget/derive";
 import { deleteExpense } from "@/app/(app)/budget/actions";
+import { isQueued, removeQueued } from "@/lib/budget/offline-queue";
 import type { BudgetExpense, MonthCategory } from "@/lib/budget/queries";
 
 interface LogTabProps {
@@ -27,6 +28,12 @@ export function LogTab({ categories, expenses, editable }: LogTabProps) {
     const matchesCategory = categoryFilter === "all" || e.category_id === categoryFilter;
     return matchesSearch && matchesCategory;
   });
+
+  function handleDelete(id: string) {
+    // Not-yet-synced expenses only exist in the local queue — remove there
+    // instead of calling the server action, which wouldn't find the row.
+    startTransition(() => (isQueued(id) ? removeQueued(id) : deleteExpense(id)));
+  }
 
   return (
     <div>
@@ -74,7 +81,7 @@ export function LogTab({ categories, expenses, editable }: LogTabProps) {
                   <button
                     type="button"
                     aria-label="Delete expense"
-                    onClick={() => startTransition(() => deleteExpense(e.id))}
+                    onClick={() => handleDelete(e.id)}
                     className="text-text-2 hover:text-danger"
                   >
                     <TrashIcon className="h-4 w-4" />

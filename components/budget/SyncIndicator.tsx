@@ -2,8 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { usePendingCount, useOfflineSync } from "@/lib/qaza/useOfflineQueue";
-import { flush } from "@/lib/qaza/offline-queue";
+import { usePendingCount, useOfflineSync } from "@/lib/budget/useOfflineQueue";
+import { flush } from "@/lib/budget/offline-queue";
 import { useToast } from "@/components/ui/Toast";
 import { SyncIcon } from "@/components/icons";
 
@@ -32,7 +32,7 @@ export function SyncIndicator() {
   return (
     <div className="mb-4 flex items-center justify-center gap-2 text-xs text-text-2">
       <span>
-        {pending} {pending === 1 ? "log" : "logs"} will sync when you&apos;re back online
+        {pending} {pending === 1 ? "expense" : "expenses"} will sync when you&apos;re back online
       </span>
       <button
         type="button"

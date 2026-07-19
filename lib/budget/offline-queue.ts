@@ -1,16 +1,17 @@
 import { createClient } from "@/lib/supabase/client";
-import type { PrayerKey } from "./calculate";
 
 export interface QueueEntry {
   id: string;
-  prayer: PrayerKey;
-  log_date: string;
-  delta: number;
-  created_at: string;
+  monthId: string;
+  categoryId: string;
+  description: string;
+  amount: number;
+  expenseDate: string;
+  createdAt: string;
 }
 
-const DB_NAME = "hearth-qaza-queue";
-const STORE = "pending-logs";
+const DB_NAME = "hearth-budget-queue";
+const STORE = "pending-expenses";
 
 let cache: QueueEntry[] = [];
 let ready: Promise<void> | null = null;
@@ -70,14 +71,16 @@ async function evict(id: string): Promise<void> {
   db.close();
 }
 
-export async function enqueue(entry: Omit<QueueEntry, "id" | "created_at"> & { id?: string }) {
+export async function enqueue(entry: Omit<QueueEntry, "id" | "createdAt"> & { id?: string }) {
   await ensureReady();
   const full: QueueEntry = {
     id: entry.id ?? crypto.randomUUID(),
-    prayer: entry.prayer,
-    log_date: entry.log_date,
-    delta: entry.delta,
-    created_at: new Date().toISOString(),
+    monthId: entry.monthId,
+    categoryId: entry.categoryId,
+    description: entry.description,
+    amount: entry.amount,
+    expenseDate: entry.expenseDate,
+    createdAt: new Date().toISOString(),
   };
   cache = [...cache, full];
   notify();
@@ -95,22 +98,23 @@ async function registerBackgroundSync() {
     const syncCapable = registration as ServiceWorkerRegistration & {
       sync?: { register(tag: string): Promise<void> };
     };
-    await syncCapable.sync?.register("qaza-sync");
+    await syncCapable.sync?.register("budget-sync");
   } catch {
     // Background Sync unsupported (Safari/Firefox) — the foreground listeners cover it.
   }
 }
 
-/** Removes a queued or already-synced log (used for the Undo toast action). */
-export async function removeById(id: string, userId: string) {
+/** True if this id is still queued locally (not yet synced to Supabase). */
+export function isQueued(id: string): boolean {
+  return cache.some((e) => e.id === id);
+}
+
+/** Removes a queued-but-unsynced expense (used when deleting before it syncs). */
+export async function removeQueued(id: string) {
   await ensureReady();
-  const wasQueued = cache.some((e) => e.id === id);
   cache = cache.filter((e) => e.id !== id);
   notify();
-  if (wasQueued) await evict(id);
-
-  const supabase = createClient();
-  await supabase.from("qaza_logs").delete().eq("id", id).eq("user_id", userId);
+  await evict(id);
 }
 
 export function subscribe(cb: () => void) {
@@ -142,13 +146,15 @@ export async function flush(userId?: string): Promise<boolean> {
   flushing = true;
   try {
     for (const entry of [...cache]) {
-      const { error } = await supabase.from("qaza_logs").upsert(
+      const { error } = await supabase.from("budget_expenses").upsert(
         {
           id: entry.id,
           user_id: uid,
-          prayer: entry.prayer,
-          log_date: entry.log_date,
-          delta: entry.delta,
+          month_id: entry.monthId,
+          category_id: entry.categoryId,
+          description: entry.description,
+          amount: entry.amount,
+          expense_date: entry.expenseDate,
         },
         { onConflict: "id" },
       );
