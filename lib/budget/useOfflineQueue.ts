@@ -49,9 +49,8 @@ export function useOfflineSync() {
     navigator.serviceWorker?.addEventListener("message", onMessage);
     const interval = setInterval(() => void flushAndRefresh(), 20_000);
 
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/sw.js").catch(() => {});
-    }
+    // Service worker itself is registered globally — see
+    // components/ServiceWorkerRegistration.tsx in the root layout.
 
     return () => {
       window.removeEventListener("online", onOnline);
