@@ -1,16 +1,25 @@
 "use client";
 
 import { useState } from "react";
-import { Card } from "@/components/ui/Card";
 import { MonthSwitcher } from "./MonthSwitcher";
 import { BalanceCard } from "./BalanceCard";
+import { AlertBanner } from "./AlertBanner";
+import { StatsRow } from "./StatsRow";
 import { AddExpenseForm } from "./AddExpenseForm";
 import { ByCategoryTab } from "./ByCategoryTab";
+import { AnalyticsTab } from "./AnalyticsTab";
 import { LogTab } from "./LogTab";
-import { monthTotals, formatCurrency } from "@/lib/budget/derive";
+import { monthTotals, paceStats } from "@/lib/budget/derive";
 import type { MonthCategory, BudgetExpense, BudgetMonth } from "@/lib/budget/queries";
 
-type Tab = "add" | "category" | "log";
+type Tab = "add" | "category" | "analytics" | "log";
+
+const TAB_LABELS: Record<Tab, string> = {
+  add: "Add Expense",
+  category: "By Category",
+  analytics: "Analytics",
+  log: "Log",
+};
 
 interface BudgetHomeProps {
   month: string;
@@ -34,6 +43,7 @@ export function BudgetHome({
   const editable = isCurrentMonth || editingPast;
 
   const { totalBudget, totalSpent } = monthTotals(categories, expenses);
+  const pace = paceStats(month, totalBudget, totalSpent);
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-6">
@@ -56,30 +66,38 @@ export function BudgetHome({
         </div>
       )}
 
+      <AlertBanner
+        remaining={pace.remaining}
+        totalBudget={totalBudget}
+        daysLeft={pace.daysLeft}
+        neededPerDay={pace.neededPerDay}
+      />
+
       <BalanceCard totalBudget={totalBudget} totalSpent={totalSpent} />
 
-      <div className="mt-4 grid grid-cols-2 gap-3">
-        <Card className="text-center">
-          <p className="text-sm text-text-2">Total Spent</p>
-          <p className="font-mono text-lg font-semibold tabular-nums">{formatCurrency(totalSpent)}</p>
-        </Card>
-        <Card className="text-center">
-          <p className="text-sm text-text-2">Total Budget</p>
-          <p className="font-mono text-lg font-semibold tabular-nums">{formatCurrency(totalBudget)}</p>
-        </Card>
+      <div className="mt-4">
+        <StatsRow
+          totalSpent={totalSpent}
+          totalBudget={totalBudget}
+          dailyAvg={pace.dailyAvg}
+          daysPassed={pace.daysPassed}
+          daysLeft={pace.daysLeft}
+          neededPerDay={pace.neededPerDay}
+          isCurrentMonth={pace.isCurrentMonth}
+        />
       </div>
 
       <div className="mt-4 flex gap-1 rounded-xl border border-border bg-surface-2 p-1">
-        {(["add", "category", "log"] as Tab[]).map((t) => (
+        {(Object.keys(TAB_LABELS) as Tab[]).map((t) => (
           <button
             key={t}
             type="button"
             onClick={() => setTab(t)}
-            className={`flex-1 rounded-lg py-2 text-sm font-medium ${
+            className={`flex-1 rounded-lg py-2 text-xs font-medium sm:text-sm ${
               tab === t ? "bg-surface shadow-[var(--shadow)]" : "text-text-2"
             }`}
           >
-            {t === "add" ? "Add Expense" : t === "category" ? "By Category" : "Log"}
+            {TAB_LABELS[t]}
           </button>
         ))}
       </div>
@@ -91,6 +109,7 @@ export function BudgetHome({
         {tab === "category" && (
           <ByCategoryTab categories={categories} expenses={expenses} month={month} />
         )}
+        {tab === "analytics" && <AnalyticsTab categories={categories} expenses={expenses} />}
         {tab === "log" && (
           <LogTab categories={categories} expenses={expenses} editable={editable} />
         )}

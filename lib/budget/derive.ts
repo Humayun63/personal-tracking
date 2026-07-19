@@ -53,3 +53,52 @@ export const CURRENCY = "৳";
 export function formatCurrency(amount: number): string {
   return `${CURRENCY}${amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
 }
+
+function daysInMonth(month: string): number {
+  const [y, m] = month.split("-").map(Number);
+  return new Date(Date.UTC(y, m, 0)).getUTCDate();
+}
+
+/** Spending pace for the month: daily average so far, days left, and the
+ * daily rate needed for the rest of the month to stay within budget. */
+export function paceStats(month: string, totalBudget: number, totalSpent: number) {
+  const total = daysInMonth(month);
+  const isCurrentMonth = month === currentMonthLabel();
+  const now = new Date();
+  const daysPassed = isCurrentMonth ? now.getUTCDate() : total;
+  const daysLeft = isCurrentMonth ? total - now.getUTCDate() : 0;
+  const dailyAvg = daysPassed > 0 ? totalSpent / daysPassed : 0;
+  const remaining = totalBudget - totalSpent;
+  const neededPerDay = daysLeft > 0 ? remaining / daysLeft : 0;
+  return { daysPassed, daysLeft, dailyAvg, neededPerDay, isCurrentMonth, remaining };
+}
+
+/** Spending grouped by calendar date, ascending — for the daily sparkline. */
+export function dailySpendingSeries(expenses: BudgetExpense[]) {
+  const byDate = new Map<string, number>();
+  for (const e of expenses) {
+    byDate.set(e.expense_date, (byDate.get(e.expense_date) ?? 0) + e.amount);
+  }
+  return [...byDate.entries()].sort(([a], [b]) => a.localeCompare(b));
+}
+
+export function topExpenses(expenses: BudgetExpense[], n = 5) {
+  return [...expenses].sort((a, b) => b.amount - a.amount).slice(0, n);
+}
+
+export interface CategoryStatus {
+  category: MonthCategory;
+  spent: number;
+  diff: number;
+  over: boolean;
+}
+
+export function categoryStatuses(
+  categories: MonthCategory[],
+  spentByCat: Record<string, number>,
+): CategoryStatus[] {
+  return categories.map((c) => {
+    const spent = spentByCat[c.category_id] ?? 0;
+    return { category: c, spent, diff: spent - c.budget, over: spent > c.budget };
+  });
+}
