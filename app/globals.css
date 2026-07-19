@@ -1,0 +1,139 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #f6f3ee;
+  --surface: #ffffff;
+  --surface-2: #fbf9f5;
+  --text: #211e18;
+  --text-2: #6e675e;
+  --border: #e8e2d8;
+  --track: #ede8df;
+
+  --success: #3e8e5a;
+  --warning: #c08a2d;
+  --danger: #c0503e;
+
+  --qaza: #5f8d7e;
+  --qaza-soft: #e7efeb;
+  --gold: #b99653;
+
+  --budget: #c08a2d;
+  --budget-soft: #f4ead6;
+  --budget-strong: #a5741f;
+
+  --finance: #2f6b4f;
+  --coaching: #4b4fa6;
+  --habits: #2a8c82;
+  --blog: #5a6b8c;
+
+  --shadow: 0 1px 2px rgba(30, 25, 18, 0.04), 0 10px 28px rgba(30, 25, 18, 0.07);
+  --shadow-lg: 0 8px 20px rgba(30, 25, 18, 0.1), 0 30px 60px rgba(30, 25, 18, 0.14);
+}
+
+:root[data-theme="dark"] {
+  --bg: #141210;
+  --surface: #1e1b16;
+  --surface-2: #26221a;
+  --text: #f1ece3;
+  --text-2: #9d9488;
+  --border: #332e26;
+  --track: #2c271f;
+
+  --success: #5cb07b;
+  --warning: #d3a24f;
+  --danger: #e0715c;
+
+  --qaza: #7fb0a0;
+  --qaza-soft: #20302b;
+  --gold: #cdae73;
+
+  --budget: #d8a64a;
+  --budget-soft: #2b2313;
+  --budget-strong: #e7bd6a;
+
+  --finance: #4c9973;
+  --coaching: #8a8de0;
+  --habits: #4fb8ac;
+  --blog: #8896bd;
+
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 30px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 12px 30px rgba(0, 0, 0, 0.5), 0 40px 70px rgba(0, 0, 0, 0.55);
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-text: var(--text);
+  --color-text-2: var(--text-2);
+  --color-border: var(--border);
+  --color-track: var(--track);
+
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+
+  --color-qaza: var(--qaza);
+  --color-qaza-soft: var(--qaza-soft);
+  --color-gold: var(--gold);
+
+  --color-budget: var(--budget);
+  --color-budget-soft: var(--budget-soft);
+  --color-budget-strong: var(--budget-strong);
+
+  --color-finance: var(--finance);
+  --color-coaching: var(--coaching);
+  --color-habits: var(--habits);
+  --color-blog: var(--blog);
+
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+.theme-icon-moon {
+  display: none;
+}
+
+:root[data-theme="dark"] .theme-icon-sun {
+  display: none;
+}
+
+:root[data-theme="dark"] .theme-icon-moon {
+  display: block;
+}
+
+@keyframes toastin {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 12px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+@keyframes sheetin {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
